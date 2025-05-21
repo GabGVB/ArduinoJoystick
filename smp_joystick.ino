@@ -1,53 +1,56 @@
-const int pinVRx = A0;   // axa X
-const int pinVRy = A1;   // axa Y
-/*
-const int ledLeft = 4;
-const int ledRight = 5;
-const int ledUp = 2;
-const int ledDown = 3;
-*/
-const int ledLeft = 3;
-const int ledRight = 2;
-const int ledUp = 4;
-const int ledDown = 5;
+#include <LiquidCrystal.h>
 
+// Initializare LCD
+LiquidCrystal lcd(4, 6, 10, 11, 12, 13);  
 
-const int deadZone = 100;
+int JoyStick_X = A0;
+int JoyStick_Y = A1;
+int JoyStick_Z = 2; // buton joystick
+
+// Poziția jucătorului pe ecran
+int x_pos = 0;
+int y_pos = 0;
+
+// Definirea caracterului custom
+byte playerChar[8] = {
+  B01100,
+  B01100,
+  B00000,
+  B01110,
+  B11100,
+  B01100,
+  B11010,
+  B10011
+};
+
 void setup() {
-  pinMode(ledLeft, OUTPUT);
-  pinMode(ledRight, OUTPUT);
-  pinMode(ledUp, OUTPUT);
-  pinMode(ledDown, OUTPUT);
-
-
+  lcd.begin(16, 2);
+  lcd.createChar(0, playerChar); // salvează caracterul la slotul 0
+  lcd.clear();
+  pinMode(JoyStick_Z, INPUT_PULLUP);
 }
 
 void loop() {
-  int x = analogRead(pinVRx);  // 0 - 1023
-  int y = analogRead(pinVRy);  // 0 - 1023
+  int x = analogRead(JoyStick_X);
+  int y = analogRead(JoyStick_Y);
 
- int intensityLeft = 0;
-  int intensityRight = 0;
-  int intensityUp = 0;
-  int intensityDown = 0;
-
-  // Direcție orizontală
-  if (x < 512 - deadZone) {
-    intensityLeft = map(x, 0, 512 - deadZone, 255, 0);  // invers pentru fade
-  } else if (x > 512 + deadZone) {
-    intensityRight = map(x, 512 + deadZone, 1023, 0, 255);
+  // Control pe X (coloane)
+  if (x < 300 && x_pos > 0) {
+    x_pos--;
+  } else if (x > 700 && x_pos < 15) {
+    x_pos++;
   }
 
-  // Direcție verticală
-  if (y < 512 - deadZone) {
-    intensityUp = map(y, 0, 512 - deadZone, 255, 0);
-  } else if (y > 512 + deadZone) {
-    intensityDown = map(y, 512 + deadZone, 1023, 0, 255);
+  // Control pe Y (rânduri)
+  if (y < 300 && y_pos > 0) {
+    y_pos--;
+  } else if (y > 700 && y_pos < 1) {
+    y_pos++;
   }
-    analogWrite(ledLeft, constrain(intensityLeft, 0, 255));
-  analogWrite(ledRight, constrain(intensityRight, 0, 255));
-  analogWrite(ledUp, constrain(intensityUp, 0, 255));
-  analogWrite(ledDown, constrain(intensityDown, 0, 255));
 
-  delay(10); // pentru stabilitate
+  lcd.clear();
+  lcd.setCursor(x_pos, y_pos);
+  lcd.write(byte(0)); // afișează caracterul custom
+
+  delay(200); // timp pentru debounce
 }
